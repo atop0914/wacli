@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/atop0914/wacli/internal/db"
@@ -83,6 +85,68 @@ func (c *WhatsAppClient) IsConnected() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.isConnected
+}
+
+// SendFile sends a file to a recipient
+func (c *WhatsAppClient) SendFile(ctx context.Context, to string, filePath string, caption string) error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.client == nil || !c.isConnected {
+		return fmt.Errorf("client not connected")
+	}
+
+	jid, err := types.ParseJID(to)
+	if err != nil {
+		return fmt.Errorf("invalid JID: %w", err)
+	}
+
+	// Read file data
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// Get file name from path
+	fileName := filepath.Base(filePath)
+
+	// Detect media type
+	mediaType := whatsmeow.MediaImage
+	ext := filepath.Ext(filePath)
+	switch ext {
+	case ".jpg", ".jpeg", ".png", ".gif":
+		mediaType = whatsmeow.MediaImage
+	case ".mp4", ".3gp":
+		mediaType = whatsmeow.MediaVideo
+	case ".mp3", ".ogg", ".opus":
+		mediaType = whatsmeow.MediaAudio
+	default:
+		mediaType = whatsmeow.MediaDocument
+	}
+
+	// Upload and send
+	uploaded, err := c.client.Upload(ctx, data, mediaType)
+	if err != nil {
+		return fmt.Errorf("failed to upload file: %w", err)
+	}
+
+	urlStr := uploaded.URL
+
+	_, err = c.client.SendMessage(ctx, jid, &waE2E.Message{
+		DocumentMessage: &waE2E.DocumentMessage{
+			Title:         &fileName,
+			Caption:       &caption,
+			URL:           &urlStr,
+			DirectPath:    &uploaded.DirectPath,
+			FileEncSHA256: uploaded.FileEncSHA256,
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to send file: %w", err)
+	}
+
+	return nil
 }
 
 // SendTextMessage sends a text message to a recipient
