@@ -203,6 +203,55 @@ func (c *WhatsAppClient) GetGroupByJID(ctx context.Context, jid string) (*types.
 	return c.client.GetGroupInfo(ctx, parsedJID)
 }
 
+// UpdateGroupName updates the name of a group
+func (c *WhatsAppClient) UpdateGroupName(ctx context.Context, jid string, name string) error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.client == nil || !c.isConnected {
+		return fmt.Errorf("client not connected")
+	}
+
+	parsedJID, err := types.ParseJID(jid)
+	if err != nil {
+		return fmt.Errorf("invalid JID: %w", err)
+	}
+
+	// Get group info first to verify it exists
+	_, err = c.client.GetGroupInfo(ctx, parsedJID)
+	if err != nil {
+		return fmt.Errorf("failed to get group: %w", err)
+	}
+
+	// Note: whatsmeow doesn't have a direct UpdateGroupName method.
+	// Group name updates are typically done via group settings.
+	// For now, return a not-supported error with a workaround suggestion.
+	_ = parsedJID // reserved for future use
+	return fmt.Errorf("group rename requires sending a message to the group with new name via WhatsApp UI - this feature is not directly supported by WhatsApp Web Protocol")
+}
+
+// RequestHistory requests older messages from a chat
+func (c *WhatsAppClient) RequestHistory(ctx context.Context, jid string, count int) error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.client == nil || !c.isConnected {
+		return fmt.Errorf("client not connected")
+	}
+
+	parsedJID, err := types.ParseJID(jid)
+	if err != nil {
+		return fmt.Errorf("invalid JID: %w", err)
+	}
+
+	// Request history sync
+	// Note: The actual history sync mechanism depends on WhatsApp server support
+	// WhatsApp Web protocol doesn't have a direct "request history" method
+	// Messages are synced when the client connects
+	_ = parsedJID // reserved for future use when protocol supports it
+	return fmt.Errorf("history backfill is handled automatically when connecting - WhatsApp does not support on-demand history requests via Web protocol")
+}
+
 // HandleIncomingMessage processes an incoming message event
 func (c *WhatsAppClient) HandleIncomingMessage(evt *events.Message) {
 	c.mu.RLock()

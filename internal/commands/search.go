@@ -106,7 +106,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		Results: results,
 	}
 
-	if sendFlags.jsonOutput {
+	if searchFlags.jsonOutput {
 		output, _ := json.MarshalIndent(searchResult, "", "  ")
 		fmt.Println(string(output))
 	} else {

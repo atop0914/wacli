@@ -61,6 +61,38 @@ func (w *WhatsAppClientWrapper) GetGroups(ctx context.Context) ([]*types.GroupIn
 	return w.client.GetGroups(ctx)
 }
 
+// GetGroupByJID retrieves a specific group by JID
+func (w *WhatsAppClientWrapper) GetGroupByJID(ctx context.Context, jid string) (*types.GroupInfo, error) {
+	if w == nil || w.client == nil {
+		return nil, fmt.Errorf("client not initialized")
+	}
+	return w.client.GetGroupByJID(ctx, jid)
+}
+
+// UpdateGroupName updates the name of a group
+func (w *WhatsAppClientWrapper) UpdateGroupName(ctx context.Context, jid string, name string) error {
+	if w == nil || w.client == nil {
+		return fmt.Errorf("client not initialized")
+	}
+	return w.client.UpdateGroupName(ctx, jid, name)
+}
+
+// RequestHistory requests message history from a chat
+func (w *WhatsAppClientWrapper) RequestHistory(ctx context.Context, jid string, count int) error {
+	if w == nil || w.client == nil {
+		return fmt.Errorf("client not initialized")
+	}
+	return w.client.RequestHistory(ctx, jid, count)
+}
+
+// GetMyJID returns the JID of the logged-in user
+func (w *WhatsAppClientWrapper) GetMyJID() string {
+	if w == nil || w.client == nil {
+		return ""
+	}
+	return w.client.GetMyJID()
+}
+
 // GetClient returns the global WhatsApp client instance
 func GetClient() *WhatsAppClientWrapper {
 	return waClient
@@ -91,4 +123,7 @@ func RegisterCommands(root *cobra.Command) {
 	root.AddCommand(sendCmd)
 	root.AddCommand(messagesCmd)
 	root.AddCommand(syncCmd)
+	root.AddCommand(groupsCmd)
+	root.AddCommand(historyCmd)
+	root.AddCommand(doctorCmd)
 }
