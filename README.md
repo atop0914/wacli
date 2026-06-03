@@ -1,5 +1,6 @@
 # wacli — WhatsApp CLI
 
+[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev/)
 A command-line interface for WhatsApp, built with Go and [whatsmeow](https://github.com/htrc/WhatsApp).
 
 ## Features
